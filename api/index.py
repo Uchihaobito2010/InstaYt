@@ -10,7 +10,6 @@ Unauthorized copying, distribution, or use is prohibited.
 """
 
 import json
-import os
 import re
 import time
 import requests
@@ -117,7 +116,7 @@ def download_from_apihut(url: str, platform: str) -> dict:
 def handler(request):
     """Main Vercel serverless function handler"""
     
-    # Set CORS headers
+    # Set CORS headers manually
     headers = {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
@@ -136,6 +135,12 @@ def handler(request):
     path = request.path
     method = request.method
     
+    # Normalize path
+    if path.startswith('/api'):
+        path = path[4:]  # Remove '/api'
+    if not path:
+        path = '/'
+    
     try:
         # GET /
         if method == 'GET' and path == '/':
@@ -151,9 +156,7 @@ def handler(request):
                     "GET /copyright": "Copyright information",
                     "GET /status": "API status"
                 },
-                "example": {
-                    "curl": 'curl -X POST "https://your-app.vercel.app/download" -H "Content-Type: application/json" -d \'{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}\''
-                }
+                "example": 'curl -X POST "https://your-app.vercel.app/download" -H "Content-Type: application/json" -d \'{"url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"}\''
             }
             info_response = add_copyright_to_response(info_response)
             return {
@@ -329,14 +332,16 @@ def handler(request):
 
 # For local testing
 if __name__ == "__main__":
-    # Simulate a request for testing
+    # Test the handler locally
     class MockRequest:
         def __init__(self, method="GET", path="/", body=None):
             self.method = method
             self.path = path
             self.body = body
     
-    # Test the handler
+    # Test home endpoint
     test_request = MockRequest(method="GET", path="/")
     response = handler(test_request)
-    print("Test Response:", json.dumps(response, indent=2))
+    print("Local Test - Home endpoint:")
+    print(json.dumps(json.loads(response['body']), indent=2))
+    print("\n" + "="*50)
